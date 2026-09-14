@@ -2,9 +2,6 @@ import os
 from dataclasses import dataclass
 from zoneinfo import ZoneInfo
 
-TAG = "#профит"
-
-
 def load_dotenv(path=".env"):
 	if not os.path.exists(path):
 		return
