@@ -37,7 +37,22 @@ def add_entries(db_path, chat_id, user_id, username, amounts, tz, message_id, da
 		con.close()
 
 
+def clear_day(db_path, chat_id, day):
+	con = connect(db_path)
+	try:
+		rows = con.execute(
+			"SELECT amount FROM profit_entries WHERE chat_id=? AND day=?",
+			(chat_id, day),
+		).fetchall()
+		con.execute("DELETE FROM profit_entries WHERE chat_id=? AND day=?", (chat_id, day))
+		con.commit()
+	finally:
+		con.close()
+	return len(rows), sum(a for (a,) in rows)
+
+
 def daily_totals(db_path, chat_id, limit):
+
 	con = connect(db_path)
 	try:
 		rows = con.execute(

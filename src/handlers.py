@@ -2,6 +2,7 @@ import ast
 import asyncio
 import logging
 import operator
+from datetime import datetime
 
 from aiogram import Dispatcher
 from aiogram.filters import Command
@@ -45,6 +46,17 @@ def parse_arg(text):
 		return None
 
 
+def parse_day(text, tz):
+	year = datetime.now(tz).year
+	for fmt in ("%Y-%m-%d", "%d.%m.%Y", "%d.%m"):
+		try:
+			day = datetime.strptime(text.strip(), fmt)
+		except ValueError:
+			continue
+		return day.replace(year=year).strftime("%Y-%m-%d") if fmt == "%d.%m" else day.strftime("%Y-%m-%d")
+	return None
+
+
 async def mark(bot, chat_id, message_id):
 	try:
 		await bot.set_message_reaction(chat_id, message_id, reaction=[ReactionTypeEmoji(emoji=CHECK)])
@@ -79,3 +91,23 @@ def register(dp: Dispatcher, bot, settings: Settings):
 			await m.reply("Использование: /profit 20+5*2")
 			return
 		await store(bot, m, settings, value)
+
+	@dp.message(Command("clear"))
+	async def clear(m: Message):
+		if m.chat.id != settings.group_id:
+			return
+		parts = (m.text or "").split(None, 1)
+		if len(parts) < 2:
+			day = datetime.now(settings.tz).strftime("%Y-%m-%d")
+		else:
+			day = parse_day(parts[1], settings.tz)
+			if day is None:
+				await m.reply("Использование: /clear [12.09]")
+				return
+		count, total = await asyncio.to_thread(storage.clear_day, settings.db_path, m.chat.id, day)
+		label = datetime.strptime(day, "%Y-%m-%d").strftime("%d.%m")
+		if not count:
+			await m.reply(f"За {label} записей нет")
+			return
+		await mark(bot, m.chat.id, m.message_id)
+		await m.reply(f"🗑 За {label} удалено записей: {count} ({total:+g})")
