@@ -1,0 +1,17 @@
+name: profitbot
+
+services:
+  profitbot:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: profitbot:latest
+    container_name: profitbot
+    env_file:
+      - path: ../.env
+        required: true
+    environment:
+      DB_PATH: /app/data/profit.db
+    volumes:
+      - ../data:/app/data
+    restart: unless-stopped
