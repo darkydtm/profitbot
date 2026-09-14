@@ -67,7 +67,8 @@ def register(dp: Dispatcher, bot, settings: Settings):
 		if m.chat.id != settings.group_id:
 			return
 		log.info("stats chat=%s", m.chat.id)
-		await reporting.send_report(bot, settings, m.chat.id)
+		hold = await m.reply("⏳ Статистика отрабатывается...")
+		await reporting.send_report(bot, settings, m.chat.id, placeholder=hold)
 
 	@dp.message(Command("profit"))
 	async def profit(m: Message):
