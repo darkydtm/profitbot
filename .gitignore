@@ -1,0 +1,6 @@
+.env
+profit.db
+__pycache__/
+.venv/
+venv/
+data/
