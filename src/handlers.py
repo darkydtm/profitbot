@@ -78,9 +78,14 @@ def register(dp: Dispatcher, bot, settings: Settings):
 		amounts = parse_amounts(m.text or m.caption or "")
 		if not amounts:
 			return
+		log.info("collect msg=%s amounts=%s", m.message_id, amounts)
 		await asyncio.to_thread(
 			storage.add_entries, settings.db_path, m.chat.id, m.from_user.id,
 			m.from_user.username or m.from_user.full_name, amounts, settings.tz, m.message_id,
 		)
 		await mark(bot, m.chat.id, m.message_id)
 		await m.reply(f"{sum(amounts):+g} учтено")
+
+	@dp.message(F.chat.id == settings.group_id)
+	async def debug_group(m: Message):
+		log.info("group text=%r caption=%r", m.text, m.caption)
