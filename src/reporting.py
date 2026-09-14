@@ -19,7 +19,7 @@ async def send_report(bot, settings, chat_id=None, pin=False):
 	target = chat_id or settings.group_id
 	totals = await asyncio.to_thread(storage.daily_totals, settings.db_path, target, settings.report_days)
 	if not totals:
-		await bot.send_message(target, "Пока нет данных. Добавьте через /add N")
+		await bot.send_message(target, "Пока нет данных. Добавьте через /profit N")
 		return
 	image = await asyncio.to_thread(chart.render_chart, totals)
 	msg = await bot.send_photo(target, BufferedInputFile(image, "profit.png"), caption=build_caption(totals))

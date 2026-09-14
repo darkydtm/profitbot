@@ -1,6 +1,7 @@
+import ast
 import asyncio
 import logging
-import re
+import operator
 
 from aiogram import Dispatcher
 from aiogram.filters import Command
@@ -12,19 +13,36 @@ from config import Settings
 
 log = logging.getLogger("profitbot")
 CHECK = "✅"
-ARG_RE = re.compile(r"([+-]?)\s*(\d+(?:[.,]\d+)?)")
+OPS = {
+	ast.Add: operator.add,
+	ast.Sub: operator.sub,
+	ast.Mult: operator.mul,
+	ast.Div: operator.truediv,
+	ast.USub: operator.neg,
+	ast.UAdd: operator.pos,
+}
+
+
+def _eval(node):
+	if isinstance(node, ast.Constant):
+		if type(node.value) in (int, float):
+			return node.value
+		raise ValueError("bad expression")
+	if isinstance(node, ast.BinOp) and type(node.op) in (ast.Add, ast.Sub, ast.Mult, ast.Div):
+		return OPS[type(node.op)](_eval(node.left), _eval(node.right))
+	if isinstance(node, ast.UnaryOp) and type(node.op) in (ast.UAdd, ast.USub):
+		return OPS[type(node.op)](_eval(node.operand))
+	raise ValueError("bad expression")
 
 
 def parse_arg(text):
 	parts = (text or "").split(None, 1)
-	if len(parts) < 2:
+	if len(parts) < 2 or not parts[1].strip():
 		return None
-	found = ARG_RE.fullmatch(parts[1].strip())
-	if not found:
+	try:
+		return float(_eval(ast.parse(parts[1].strip(), mode="eval").body))
+	except (ValueError, SyntaxError, ZeroDivisionError, OverflowError, RecursionError):
 		return None
-	sign, num = found.groups()
-	value = float(num.replace(",", "."))
-	return -value if sign == "-" else value
 
 
 async def mark(bot, chat_id, message_id):
@@ -51,22 +69,12 @@ def register(dp: Dispatcher, bot, settings: Settings):
 		log.info("stats chat=%s", m.chat.id)
 		await reporting.send_report(bot, settings, m.chat.id)
 
-	@dp.message(Command("add"))
-	async def add(m: Message):
+	@dp.message(Command("profit"))
+	async def profit(m: Message):
 		if m.chat.id != settings.group_id:
 			return
 		value = parse_arg(m.text)
 		if value is None:
-			await m.reply("Использование: /add 20")
+			await m.reply("Использование: /profit 20+5*2")
 			return
 		await store(bot, m, settings, value)
-
-	@dp.message(Command("remove"))
-	async def remove(m: Message):
-		if m.chat.id != settings.group_id:
-			return
-		value = parse_arg(m.text)
-		if value is None:
-			await m.reply("Использование: /remove 5")
-			return
-		await store(bot, m, settings, -abs(value))
