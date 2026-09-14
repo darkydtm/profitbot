@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from aiogram import Dispatcher, F
+from aiogram import BaseMiddleware, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import Message, ReactionTypeEmoji
 
@@ -14,6 +14,16 @@ log = logging.getLogger("profitbot")
 CHECK = "✅"
 
 
+class UpdateLogMiddleware(BaseMiddleware):
+	async def __call__(self, handler, event, data):
+		msg = event.message or event.edited_message or event.channel_post
+		if msg is None:
+			log.info("update %s", type(event).__name__)
+		else:
+			log.info("update chat=%s text=%r caption=%r", msg.chat.id, msg.text, msg.caption)
+		return await handler(event, data)
+
+
 async def mark(bot, chat_id, message_id, emoji=CHECK):
 	try:
 		reactions = [ReactionTypeEmoji(emoji=emoji)] if emoji else []
@@ -23,10 +33,13 @@ async def mark(bot, chat_id, message_id, emoji=CHECK):
 
 
 def register(dp: Dispatcher, bot, settings: Settings):
+	dp.update.middleware(UpdateLogMiddleware())
+
 	@dp.message(Command("stats"))
 	async def stats(m: Message):
 		if m.chat.id != settings.group_id:
 			return
+		log.info("stats chat=%s", m.chat.id)
 		await reporting.send_report(bot, settings, m.chat.id)
 
 	@dp.message(Command("add"))
