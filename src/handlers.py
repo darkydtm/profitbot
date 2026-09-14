@@ -50,7 +50,7 @@ def register(dp: Dispatcher, bot, settings: Settings):
 			target.from_user.username or target.from_user.full_name, amounts, settings.tz, target.message_id,
 		)
 		await mark(bot, m.chat.id, target.message_id)
-		await m.reply(f"✅ {sum(amounts):+g} добавлено")
+		await m.reply(f"{sum(amounts):+g} добавлено")
 
 	@dp.message(Command("remove"))
 	async def remove(m: Message):
@@ -83,4 +83,4 @@ def register(dp: Dispatcher, bot, settings: Settings):
 			m.from_user.username or m.from_user.full_name, amounts, settings.tz, m.message_id,
 		)
 		await mark(bot, m.chat.id, m.message_id)
-		await m.reply(f"✅ {sum(amounts):+g} учтено")
+		await m.reply(f"{sum(amounts):+g} учтено")
