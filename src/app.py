@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 async def main(settings=None):
 	settings = settings or load_settings()
 	if not settings.token or not settings.group_id:
-		raise SystemExit("Set BOT_TOKEN and GROUP_ID in .env")
+		raise SystemExit("Set BOT_TOKEN and GROUP_ID in deploy/.env")
 	bot = Bot(settings.token)
 	dp = Dispatcher()
 	handlers.register(dp, bot, settings)

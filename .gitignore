@@ -1,4 +1,4 @@
-.env
+deploy/.env
 profit.db
 __pycache__/
 .venv/

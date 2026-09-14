@@ -8,7 +8,7 @@ services:
     image: profitbot:latest
     container_name: profitbot
     env_file:
-      - path: ../.env
+      - path: ./.env
         required: true
     environment:
       DB_PATH: /app/data/profit.db

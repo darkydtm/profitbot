@@ -27,7 +27,8 @@ class Settings:
 
 
 def load_settings():
-	load_dotenv()
+	for path in ("deploy/.env", ".env"):
+		load_dotenv(path)
 	return Settings(
 		token=os.getenv("BOT_TOKEN", ""),
 		group_id=int(os.getenv("GROUP_ID", "0")),
