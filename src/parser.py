@@ -9,8 +9,9 @@ def parse_amounts(text):
 	if not text or TAG not in text.lower():
 		return []
 	tail = text.lower().split(TAG, 1)[1]
-	out = []
-	for sign, num in AMOUNT_RE.findall(tail):
-		value = float(num.replace(",", "."))
-		out.append(value if sign == "+" else -value)
-	return out
+	found = AMOUNT_RE.search(tail)
+	if not found:
+		return []
+	sign, num = found.groups()
+	value = float(num.replace(",", "."))
+	return [value if sign == "+" else -value]
